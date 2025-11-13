@@ -66,7 +66,7 @@ export default function LoginPage() {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-balck focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
             <button
               onClick={handleSendOtp}
@@ -85,7 +85,7 @@ export default function LoginPage() {
               placeholder="Enter OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
+              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-black focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
             />
             <button
               onClick={handleVerifyOtp}
