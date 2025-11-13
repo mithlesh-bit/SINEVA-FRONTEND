@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1); 
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
       login({ email: storedEmail }, token);
 
       localStorage.removeItem("loginEmail");
-      router.push("/"); 
+      router.push("/");
     } catch (err) {
       setMessage(err.response?.data?.message || "Error verifying OTP");
     }
@@ -66,8 +66,11 @@ export default function LoginPage() {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-balck focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="w-full p-3 rounded-2xl bg-[rgba(55,65,81,0.5)] border border-gray-600 placeholder-gray-400 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base appearance-none"
             />
+
+
+
             <button
               onClick={handleSendOtp}
               disabled={loading}
@@ -80,12 +83,13 @@ export default function LoginPage() {
 
         {step === 2 && (
           <div className="flex flex-col gap-4">
+
             <input
               type="text"
               placeholder="Enter OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-gray-700/50 border border-gray-600 placeholder-gray-400 text-black focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
+              className="w-full p-3 rounded-2xl bg-[rgba(55,65,81,0.5)] border border-gray-600 placeholder-gray-400 text-black focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base appearance-none"
             />
             <button
               onClick={handleVerifyOtp}
