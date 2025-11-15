@@ -24,6 +24,8 @@ export default function Page() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState("");
   const [modalImage, setModalImage] = useState(null);
+  const [aiPrompts, setAiPrompts] = useState([]); // generated prompts
+  const [showPromptPopup, setShowPromptPopup] = useState(false); // show popup modal
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const busy = isUploading || isGenerating || loading;
@@ -38,9 +40,10 @@ export default function Page() {
 
   const fetchChat = async () => {
     try {
-      const res = await axios.get("https://sineva-backend.vercel.app/api/image/getimage", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        "https://sineva-backend.vercel.app/api/image/getimage",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setChat(res.data?.data || []);
     } catch (err) {
       console.error("Error fetching images:", err);
@@ -109,7 +112,7 @@ export default function Page() {
 
     try {
       const formData = new FormData();
-      if (prompt) formData.append("prompt", prompt);
+      if (userText) formData.append("prompt", userText);
       if (imageUrlInput) formData.append("imageUrl", imageUrlInput);
 
       const res = await axios.post(
@@ -149,6 +152,37 @@ export default function Page() {
     }
   };
 
+  // ------------------------ NEW: GENERATE AI PROMPTS ------------------------
+  const handleGeneratePrompts = async () => {
+    if (!prompt.trim()) return setMessage("Please enter details first.");
+
+    setIsGenerating(true);
+    setMessage("Generating prompts...");
+
+    try {
+      const res = await axios.post(
+        "https://sineva-backend.vercel.app/api/image/generate",
+        { details: prompt },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setAiPrompts(res.data.data || []);
+      setShowPromptPopup(true); // open popup
+      setMessage("");
+    } catch (err) {
+      console.error("[PROMPT] Error:", err);
+      setMessage("Failed to generate prompts.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const useSuggestedPrompt = (p) => {
+    setPrompt(p);
+    setAiPrompts([]);
+    setShowPromptPopup(false); // close popup
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     router.push("/login");
@@ -184,21 +218,18 @@ export default function Page() {
 
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Sidebar */}
       <Sidebar onLogout={handleLogout} />
 
-      {/* Chat Container */}
       <div className="flex-1 flex bg-gray-900 justify-center items-center p-4 sm:p-6 overflow-hidden">
         <div className="flex flex-col w-full max-w-6xl h-full max-h-[90vh] glass rounded-2xl shadow-2xl overflow-hidden animate-scaleIn
                         sm:max-w-full sm:h-full sm:rounded-xl sm:shadow-xl">
 
-          {/* Header */}
           <header className="p-4 text-center border-b border-gray-800 bg-black/70 backdrop-blur-xl">
             <h1 className="text-xl sm:text-lg font-semibold gradient-text">SINEVA GRAFICS</h1>
           </header>
 
-          {/* Chat Area */}
           <main className="flex-1 custom-scrollbar overflow-y-auto px-4 sm:px-3 py-3 sm:py-2 flex flex-col gap-3">
+
             {chat.length === 0 && (
               <p className="text-gray-500 text-center mt-6 text-sm sm:text-xs">
                 Start a conversation by typing a prompt or uploading an image.
@@ -273,11 +304,7 @@ export default function Page() {
                             stroke="currentColor"
                             strokeWidth={2}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 19l9-7-9-7v4H3v6h9v4z"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9-7-9-7v4H3v6h9v4z" />
                           </svg>
                         </button>
                       </div>
@@ -293,8 +320,7 @@ export default function Page() {
             <div ref={chatEndRef}></div>
           </main>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-800 bg-black/70 p-3 sm:p-2 backdrop-blur-xl">
+          <footer className="border-t border-gray-800 bg-black/70 p-3 sm:p-2 backdrop-blur-xl flex flex-col gap-2">
             <div className="flex items-center gap-2 sm:gap-1">
               <input
                 ref={fileInputRef}
@@ -316,23 +342,34 @@ export default function Page() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className={`flex-1 rounded-2xl px-3 py-2 text-white placeholder-gray-400 focus:outline-none
-                  resize-none h-10 max-h-32 overflow-y-auto custom-scrollbar
-                  bg-transparent backdrop-blur-md border border-gray-700/40 shadow-inner
-                  hover:bg-black/20 transition-all duration-300
-                  ${busy ? "opacity-60 cursor-not-allowed" : ""}`}
+        resize-none h-10 max-h-32 overflow-y-auto custom-scrollbar
+        bg-transparent backdrop-blur-md border border-gray-700/40 shadow-inner
+        hover:bg-black/20 transition-all duration-300
+        ${busy ? "opacity-60 cursor-not-allowed" : ""}`}
                 disabled={busy}
               />
               <button
                 onClick={handleGenerate}
                 disabled={busy}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white font-medium btn-glow hover:opacity-90 text-sm sm:text-xs"
+                className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 rounded-full text-white font-medium btn-glow hover:opacity-90 text-sm sm:text-xs"
               >
                 {isUploading ? "Uploading..." : isGenerating ? "Generating..." : "Send"}
               </button>
             </div>
 
+            {/* NEW: Separate Generate Prompts Button */}
+            <div className="flex justify-center mt-2">
+              <button
+                onClick={handleGeneratePrompts}
+                disabled={busy}
+                className="w-full max-w-md px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white font-medium hover:opacity-90 text-sm sm:text-xs"
+              >
+                {isGenerating ? "Generating Prompts..." : "Generate AI Prompts"}
+              </button>
+            </div>
+
             {imageUrlInput && (
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2 justify-center">
                 <img
                   src={imageUrlInput}
                   alt="preview"
@@ -350,11 +387,11 @@ export default function Page() {
 
             {message && <p className="text-center text-red-400 mt-2 text-xs sm:text-[10px]">{message}</p>}
           </footer>
+
         </div>
       </div>
 
-      {/* Modal */}
-      {/* Modal */}
+      {/* IMAGE MODAL */}
       {modalImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
@@ -365,7 +402,30 @@ export default function Page() {
             alt="Large view"
             className="max-h-full max-w-full object-contain rounded-lg shadow-lg"
           />
+        </div>
+      )}
 
+      {/* AI PROMPT POPUP MODAL */}
+      {showPromptPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 p-6 rounded-xl w-full max-w-md shadow-2xl flex flex-col gap-3">
+            <h2 className="text-white text-lg font-semibold mb-2">AI Generated Prompts</h2>
+            {aiPrompts.map((p, i) => (
+              <div
+                key={i}
+                onClick={() => useSuggestedPrompt(p)}
+                className="bg-gray-700 p-2 rounded-lg hover:bg-gray-600 cursor-pointer text-white text-sm"
+              >
+                {p}
+              </div>
+            ))}
+            <button
+              onClick={() => setShowPromptPopup(false)}
+              className="mt-3 px-4 py-2 bg-red-600 rounded-full text-white text-sm hover:opacity-90"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
